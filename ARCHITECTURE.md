@@ -36,12 +36,25 @@ Single crate (the nih-plug template), DSP as modules:
 iab_saturator/
 ├── src/
 │   ├── lib.rs               # nih-plug glue: params, lifecycle, calls into dsp/
-│   └── dsp/                 # pure DSP, no nih_plug imports, fully unit-tested
-│       ├── db.rs            # memoryless dB → linear gain
-│       ├── drive.rs         # memoryless gain
-│       ├── curve.rs         # memoryless waveshaper (tanh)
-│       ├── smoother.rs      # one-pole LPF, has state
-│       └── harmonics_test.rs # DFT test of drive + curve (test-only)
+│   ├── dsp/                 # pure DSP, no nih_plug imports, fully unit-tested
+│   │   ├── db.rs            # memoryless dB → linear gain
+│   │   ├── drive.rs         # memoryless gain
+│   │   ├── curve.rs         # memoryless waveshaper (tanh)
+│   │   ├── smoother.rs      # one-pole LPF, has state
+│   │   └── harmonics_test.rs # DFT test of drive + curve (test-only)
+│   └── editor/              # GUI (egui), reads/writes parameters only
+│       ├── mod.rs           # per-window UI state, repaint policy
+│       ├── window.rs        # nih-plug Editor: egui-baseview window (adapted from nih_plug_egui)
+│       ├── layout.rs        # the layout table from CLAUDE.md
+│       ├── sprites.rs       # sprites.json, frame index, UV rect
+│       ├── assets.rs        # embedded PNGs, decoded when the editor opens
+│       ├── fonts.rs         # embedded Barlow Condensed Medium
+│       ├── paint.rs         # textures + drawing (panel, screws, knobs, readouts)
+│       ├── knob.rs          # knob input: drag / Shift / double-click / wheel
+│       ├── curve_selector.rs # CURVE input: click / drag / double-click
+│       ├── alignment_test.rs # pixel checks: sprite pointers vs panel ticks (test-only)
+│       └── preview_test.rs  # software render of paint() to PNG (test-only)
+├── assets/                  # gui/ (panel, sprite sheets, sprites.json), fonts/ (OFL)
 └── xtask/                   # nih-plug bundler
 ```
 
@@ -50,9 +63,30 @@ It only maps samples to samples.
 
 ## Parameters
 
-| Name  | Range   | Default | Unit | Smoothing                         |
-|-------|---------|---------|------|-----------------------------------|
-| Drive | 0 … +36 | 0       | dB   | one-pole, τ = 10 ms, on linear g  |
+IDs are stored in saved projects and automation: they never change.
+
+| ID        | Name    | Range          | Default | Unit | Readout     | Status                  |
+|-----------|---------|----------------|---------|------|-------------|-------------------------|
+| `drive`   | Drive   | 0 … +36        | 0       | dB   | `15.0 dB`   | wired to DSP            |
+| `output`  | Output  | −36 … 0        | 0       | dB   | `-6.0 dB`   | declared, not wired yet |
+| `dry_wet` | Dry/Wet | 0 … 100        | 100     | %    | `75 %`      | declared, not wired yet |
+| `curve`   | Curve   | enum (4)       | Tanh    | —    | `TANH`      | declared, not wired yet |
+
+- All ranges are linear.
+- Curve variants (variant ID → display name): `tanh` → TANH, `curve2` → CURVE 2,
+  `curve3` → CURVE 3, `curve4` → CURVE 4.
+- Output and Dry/Wet get a smoother when they are wired (not before: there is no audio path).
+- The editor window size is persisted in the plugin state (`editor-state`).
+
+## Editor
+
+- Fixed 600×360 logical px. All images are 2x and drawn at half size.
+- The editor reads parameter values and writes them only through `ParamSetter`
+  (begin / set / end per gesture). It never touches DSP state.
+- Images are decoded once per editor opening and uploaded as textures on the first frame.
+- Repaint policy: egui runs every frame (cheap), but the window renders only when a
+  displayed value changed (GUI input, host automation, undo, preset), on input, and during
+  the first 30 frames after opening.
 
 ## Buffers and channels
 

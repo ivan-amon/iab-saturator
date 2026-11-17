@@ -1,7 +1,9 @@
 use nih_plug::prelude::*;
+use nih_plug_egui::EguiState;
 use std::sync::Arc;
 
 mod dsp;
+mod editor;
 
 use dsp::{curve::curve, db::db_to_gain, drive::drive, smoother::Smoother};
 
@@ -15,12 +17,46 @@ struct IabSaturator {
     drive_smoother: Smoother,
 }
 
+/// Parameter IDs are part of saved projects and automation: never change them.
 #[derive(Params)]
-struct IabSaturatorParams {
+pub struct IabSaturatorParams {
+    /// Editor window size, persisted with the plugin state.
+    #[persist = "editor-state"]
+    pub editor_state: Arc<EguiState>,
+
     /// Drive in dB. Smoothing is done by our own `Smoother` on the linear gain, so nih-plug's
     /// built-in smoother is left disabled (the `FloatParam::new` default).
     #[id = "drive"]
     pub drive: FloatParam,
+
+    /// Output level in dB. Declared, not wired to the DSP yet (no smoother until it is).
+    #[id = "output"]
+    pub output: FloatParam,
+
+    /// Dry/wet mix in %. Declared, not wired to the DSP yet (no smoother until it is).
+    #[id = "dry_wet"]
+    pub dry_wet: FloatParam,
+
+    /// Waveshaper curve. Declared, not wired to the DSP yet.
+    #[id = "curve"]
+    pub curve: EnumParam<CurveType>,
+}
+
+/// Curve selector positions. The `#[id]`s are stored in saved projects: never change them.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CurveType {
+    #[id = "tanh"]
+    #[name = "TANH"]
+    Tanh,
+    #[id = "curve2"]
+    #[name = "CURVE 2"]
+    Curve2,
+    #[id = "curve3"]
+    #[name = "CURVE 3"]
+    Curve3,
+    #[id = "curve4"]
+    #[name = "CURVE 4"]
+    Curve4,
 }
 
 impl Default for IabSaturator {
@@ -34,7 +70,10 @@ impl Default for IabSaturator {
 
 impl Default for IabSaturatorParams {
     fn default() -> Self {
+        let (window_width, window_height) = editor::WINDOW_SIZE;
         Self {
+            editor_state: EguiState::from_size(window_width, window_height),
+
             drive: FloatParam::new(
                 "Drive",
                 0.0,
@@ -44,7 +83,31 @@ impl Default for IabSaturatorParams {
                 },
             )
             .with_unit(" dB")
-            .with_value_to_string(formatters::v2s_f32_rounded(2)),
+            .with_value_to_string(formatters::v2s_f32_rounded(1)),
+
+            output: FloatParam::new(
+                "Output",
+                0.0,
+                FloatRange::Linear {
+                    min: -36.0,
+                    max: 0.0,
+                },
+            )
+            .with_unit(" dB")
+            .with_value_to_string(formatters::v2s_f32_rounded(1)),
+
+            dry_wet: FloatParam::new(
+                "Dry/Wet",
+                100.0,
+                FloatRange::Linear {
+                    min: 0.0,
+                    max: 100.0,
+                },
+            )
+            .with_unit(" %")
+            .with_value_to_string(formatters::v2s_f32_rounded(0)),
+
+            curve: EnumParam::new("Curve", CurveType::Tanh),
         }
     }
 }
@@ -83,6 +146,10 @@ impl Plugin for IabSaturator {
 
     fn params(&self) -> Arc<dyn Params> {
         self.params.clone()
+    }
+
+    fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
+        editor::create(self.params.clone())
     }
 
     fn initialize(
