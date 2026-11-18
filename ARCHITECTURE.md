@@ -35,19 +35,28 @@ Single crate, DSP as modules:
 ```text
 iab_saturator/
 ├── src/
-│   ├── lib.rs               # nice-plug glue: params, lifecycle, calls into dsp/
-│   └── dsp/                 # pure DSP, no framework imports, fully unit-tested
-│       ├── db.rs            # memoryless dB → linear gain
-│       ├── drive.rs         # memoryless gain
-│       ├── curve.rs         # memoryless waveshaper (tanh)
-│       ├── smoother.rs      # one-pole LPF, has state
-│       └── harmonics_test.rs # DFT test of drive + curve (test-only)
-├── assets/                  # gui/ (panel, sprite sheets, sprites.json), fonts/ (OFL)
+│   ├── lib.rs               # nice-plug glue: lifecycle, editor creation, calls into dsp/
+│   ├── params.rs            # parameters, enums, readout formatters
+│   ├── dsp/                 # pure DSP, no framework imports, fully unit-tested
+│   │   ├── db.rs            # memoryless dB → linear gain
+│   │   ├── drive.rs         # memoryless gain
+│   │   ├── curve.rs         # memoryless waveshaper (tanh)
+│   │   ├── smoother.rs      # one-pole LPF, has state
+│   │   └── harmonics_test.rs # DFT test of drive + curve (test-only)
+│   └── editor/              # GUI (nice-plug-egui), reads/writes parameters only
+│       ├── mod.rs           # NiceEguiApp: open/close, input then paint each frame
+│       ├── layout.rs        # layout.json (serde) + consistency tests vs params
+│       ├── assets.rs        # embedded PNGs, decoding + size tests vs layout.json
+│       ├── fonts.rs         # embedded Roboto Slab 600
+│       ├── geometry.rs      # pure math: rects, angles, drag/wheel → value, text anchor
+│       ├── widgets.rs       # input → ParamSetter (knob, selector, segments, toggle)
+│       └── paint.rs         # textures + drawing in draw_order (+ headless frame test)
+├── assets/
+│   ├── gui/                 # layout.json (positions, sizes, colours, texts) + bg.png and
+│   │                        # sprites rendered in Blender from it (2x, straight alpha)
+│   └── fonts/               # RobotoSlab-SemiBold.ttf (readouts) + licence (Apache-2.0)
 └── xtask/                   # nice-plug bundler (nice-plug-xtask)
 ```
-
-`src/editor/` (nice-plug-egui) will be added when the GUI is rewritten. The nih-plug MVP
-editor is kept under the git tag `nih-plug-final` for reference.
 
 The `dsp` module knows nothing about hosts, threads or where buffers come from.
 It only maps samples to samples.
@@ -56,29 +65,47 @@ It only maps samples to samples.
 
 IDs are stored in saved projects and automation: they never change.
 
-| ID        | Name    | Range          | Default | Unit | Readout     | Status                  |
-|-----------|---------|----------------|---------|------|-------------|-------------------------|
-| `drive`   | Drive   | 0 … +36        | 0       | dB   | `15.0 dB`   | wired to DSP            |
-| `output`  | Output  | −36 … 0        | 0       | dB   | `-6.0 dB`   | declared, not wired yet |
-| `dry_wet` | Dry/Wet | 0 … 100        | 100     | %    | `75 %`      | declared, not wired yet |
-| `curve`   | Curve   | enum (4)       | Tanh    | —    | `TANH`      | declared, not wired yet |
+| ID             | Name         | Range     | Default   | Unit | Readout     | Status                  |
+|----------------|--------------|-----------|-----------|------|-------------|-------------------------|
+| `drive`        | Drive        | 0 … +36   | 0         | dB   | `+15.0 dB`  | wired to DSP            |
+| `output`       | Output       | −36 … 0   | 0         | dB   | `−6.0 dB`   | declared, not wired yet |
+| `dry_wet`      | Dry/Wet      | 0 … 100   | 100       | %    | `75 %`      | declared, not wired yet |
+| `curve`        | Curve        | enum (7)  | SOFT CLIP | —    | `SOFT CLIP` | declared, not wired yet |
+| `oversampling` | Oversampling | enum (4)  | OFF       | —    | `4×`        | declared, not wired yet |
+| `auto_gain`    | Auto Gain    | bool      | off       | —    | —           | declared, not wired yet |
 
 - All ranges are linear.
-- Curve variants (variant ID → display name): `tanh` → TANH, `curve2` → CURVE 2,
-  `curve3` → CURVE 3, `curve4` → CURVE 4.
+- Readouts: Drive always signed; Output uses U+2212 (never `−0.0`). Typed values accept
+  `+`, `-` or `−`, with or without ` dB`.
+- Curve variants (variant ID → display name), in panel order: `tanh` → SOFT CLIP (the tanh
+  of the DSP; the old ID is kept so saved projects load), `hard_clip` → HARD CLIP,
+  `warm` → WARM, `tube` → TUBE, `fold` → FOLD, `rectify` → RECTIFY, `bit_crush` → BIT CRUSH.
+- Oversampling variants: `off` → OFF, `x2` → 2×, `x4` → 4×, `x8` → 8×.
+- The GUI changes every parameter; only Drive reaches the audio.
 - Output and Dry/Wet get a smoother when they are wired (not before: there is no audio path).
 
 ## Editor
 
-Not implemented yet (`type Editor = ()`): the host shows its generic parameter view.
-Requirements for the nice-plug-egui rewrite:
-
-- Fixed 600×360 logical px. All images are 2x and drawn at half size.
+- Fixed 840×500 logical px. All images are 2x and drawn at half size.
+- Every position, size, colour and text comes from `assets/gui/layout.json`; nothing is
+  placed by hand in code. Draw order: `draw_order` in the same file.
+- Static art is one image (`bg.png`). Knobs: fixed body sprite + pointer sprite rotated by
+  `sweep.from + (sweep.to - sweep.from) * normalized`. The VU needle rotates about its pivot
+  and is clipped to the meter face. Readouts are live text (Roboto Slab 600).
+- The art is regenerated in Blender from `layout.json` (scripts kept outside the repo).
 - The editor reads parameter values and writes them only through `ParamSetter`
   (begin / set / end per gesture). It never touches DSP state.
 - Images are decoded once per editor opening and uploaded as textures on the first frame.
 - Repaint only when needed. nice-plug-egui does not repaint every frame: it repaints on
   input and when the host reports a parameter or state change (automation, undo, preset).
+- VU needles are drawn at `meter_scale.rest_angle` until the meters get a level detector
+  (a DSP block, not designed yet).
+- Interaction (layout.json `interaction`): knobs drag 200 px = full range, Shift ×0.1,
+  double-click = default, wheel = 1 % per notch. CURVE: click = next (wraps), drag/wheel
+  step (clamped), click on a label or LED selects it. Oversampling: click a segment.
+  Auto Gain: click toggles.
+- Not yet in layout.json, so set in code: readout text size = 0.5 × pill height
+  (`paint.rs`), wheel step (`geometry.rs`).
 
 ## Buffers and channels
 

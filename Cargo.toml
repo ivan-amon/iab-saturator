@@ -19,6 +19,26 @@ crate-type = ["cdylib"]
 # thread in debug builds.
 nice-plug = { version = "0.4.2", features = ["assert_process_allocs"] }
 
+# GUI (GUI thread only).
+nice-plug-egui = "0.6.0"
+egui = "0.37.0"
+# PNG decoding when the editor opens; layout.json parsing.
+png = "0.18"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Decode the PNGs fast in debug builds too (editor opening and tests).
+[profile.dev.package.png]
+opt-level = 3
+[profile.dev.package.fdeflate]
+opt-level = 3
+[profile.dev.package.miniz_oxide]
+opt-level = 3
+[profile.dev.package.crc32fast]
+opt-level = 3
+[profile.dev.package.simd-adler32]
+opt-level = 3
+
 [profile.release]
 lto = "thin"
 strip = "symbols"

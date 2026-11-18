@@ -35,35 +35,17 @@ Read ARCHITECTURE.md before touching code.
   host records automation and undo.
 - Load textures and fonts once when the editor opens, never per frame.
   Allocation is fine on the GUI thread; the real-time rules apply to `process()` only.
-- No magic numbers: sprite sizes come from `assets/gui/sprites.json`,
-  positions from the layout table below.
+- No magic numbers: positions, sizes, colours, angles and texts come from
+  `assets/gui/layout.json`; sprite draw sizes are the PNG size / `render_scale`.
 - Value readouts use each parameter's own formatter, so they match what Ableton shows.
 
 ## GUI assets (`assets/`)
-- `gui/panel.png`: faceplate without knobs, 1200×720 (2x of the 600×360 window).
-- `gui/drive.png`, `gui/knob_small.png`, `gui/curve.png`: sprite sheets, row-major grid.
-- `gui/screw_tl.png`, `gui/screw_tr.png`, `gui/screw_bl.png`, `gui/screw_br.png`.
-- `gui/sprites.json`: frame size (2x), frame count, columns, rows, angle range.
-- `fonts/`: Barlow Condensed (OFL) for value readouts.
-- Frame for a knob: `k = round(v · (frame_count − 1))`, v = normalized parameter in [0, 1].
-
-## GUI layout (1x px, origin top-left of the 600×360 window)
-
-| Element  | Center (x, y) | Size  | Sprite         | Readout (x, y), color   |
-|----------|---------------|-------|----------------|-------------------------|
-| DRIVE    | (380, 176)    | Ø112  | drive.png      | (380, 287), #292824     |
-| DRY/WET  | (240, 218)    | Ø52   | knob_small.png | (240, 287), #292824     |
-| OUTPUT   | (520, 218)    | Ø52   | knob_small.png | (520, 287), #292824     |
-| CURVE    | (88, 240)     | Ø40   | curve.png      | (88, 305), #d5cbb1      |
-| Screw TL | (20, 20)      | Ø9    | screw_tl.png   | —                       |
-| Screw TR | (580, 20)     | Ø9    | screw_tr.png   | —                       |
-| Screw BL | (20, 340)     | Ø9    | screw_bl.png   | —                       |
-| Screw BR | (580, 340)    | Ø9    | screw_br.png   | —                       |
-
-- Sprites are drawn centered on the element center, at half their pixel size (2x assets).
-- Readouts: Barlow Condensed Medium, 12 px, centered on the given point.
-- Knob interaction: vertical drag, Shift for fine drag, double-click resets to default,
-  mouse wheel steps. CURVE is discrete: drag or click cycles through its 4 positions.
+- `gui/layout.json`: the single source of the GUI geometry (840×500 at 1x, `render_scale` 2).
+  Generated outside the repo (gen_layout.py); the art is rendered in Blender from it.
+- `gui/bg.png` (all static art) + sprites listed in the `assets` block of layout.json,
+  2x, straight alpha. Every PNG must be its layout box × `render_scale` (tested).
+- `fonts/`: Roboto Slab SemiBold (Apache-2.0) for the live readouts.
+- Draw order, angle convention and interaction: see ARCHITECTURE.md › Editor.
 
 ## Notation (UPM, not the US convention)
 - `fs` sampling rate, `ts` sampling period
@@ -72,10 +54,10 @@ Read ARCHITECTURE.md before touching code.
 
 ## Current scope
 - DSP: Drive knob + tanh curve, wired. No oversampling.
-- Output, Dry/Wet and Curve exist as parameters, but are NOT wired
-  to the DSP yet. Do not wire them until asked.
-- No custom GUI yet (`type Editor = ()`): the host shows its generic parameter view.
-  The GUI will be rewritten with nice-plug-egui following the GUI rules and layout above.
+- Output, Dry/Wet, Curve, Oversampling and Auto Gain exist as parameters and in the GUI,
+  but are NOT wired to the DSP yet. Do not wire them until asked.
+- GUI: nice-plug-egui editor from layout.json. VU needles rest until the meters get a
+  detector (DSP to be designed).
 
 ## Verification
 - Sine in → Spectrum after the plugin. Only odd harmonics must appear.
