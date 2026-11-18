@@ -6,8 +6,9 @@ Claude writes the code (plugin plumbing, GUI, tooling) and reviews.
 Read ARCHITECTURE.md before touching code.
 
 ## Stack
-- Rust, nih-plug
-- GUI: nih_plug_egui (image-based panel, no stock egui widgets)
+- Rust, nice-plug (https://codeberg.org/RustAudio/nice-plug, community successor of nih-plug)
+- GUI: nice-plug-egui (image-based panel, no stock egui widgets)
+- The last nih-plug version (DSP + MVP GUI) is tagged `nih-plug-final`.
 - Target: Windows 11, Ableton Live 12
 
 ## Commands
@@ -71,8 +72,10 @@ Read ARCHITECTURE.md before touching code.
 
 ## Current scope
 - DSP: Drive knob + tanh curve, wired. No oversampling.
-- Output, Dry/Wet and Curve exist as parameters and in the GUI, but are NOT wired
+- Output, Dry/Wet and Curve exist as parameters, but are NOT wired
   to the DSP yet. Do not wire them until asked.
+- No custom GUI yet (`type Editor = ()`): the host shows its generic parameter view.
+  The GUI will be rewritten with nice-plug-egui following the GUI rules and layout above.
 
 ## Verification
 - Sine in → Spectrum after the plugin. Only odd harmonics must appear.

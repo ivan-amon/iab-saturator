@@ -1,9 +1,7 @@
-use nih_plug::prelude::*;
-use nih_plug_egui::EguiState;
+use nice_plug::prelude::*;
 use std::sync::Arc;
 
 mod dsp;
-mod editor;
 
 use dsp::{curve::curve, db::db_to_gain, drive::drive, smoother::Smoother};
 
@@ -20,11 +18,7 @@ struct IabSaturator {
 /// Parameter IDs are part of saved projects and automation: never change them.
 #[derive(Params)]
 pub struct IabSaturatorParams {
-    /// Editor window size, persisted with the plugin state.
-    #[persist = "editor-state"]
-    pub editor_state: Arc<EguiState>,
-
-    /// Drive in dB. Smoothing is done by our own `Smoother` on the linear gain, so nih-plug's
+    /// Drive in dB. Smoothing is done by our own `Smoother` on the linear gain, so nice-plug's
     /// built-in smoother is left disabled (the `FloatParam::new` default).
     #[id = "drive"]
     pub drive: FloatParam,
@@ -70,10 +64,7 @@ impl Default for IabSaturator {
 
 impl Default for IabSaturatorParams {
     fn default() -> Self {
-        let (window_width, window_height) = editor::WINDOW_SIZE;
         Self {
-            editor_state: EguiState::from_size(window_width, window_height),
-
             drive: FloatParam::new(
                 "Drive",
                 0.0,
@@ -137,10 +128,12 @@ impl Plugin for IabSaturator {
     const MIDI_INPUT: MidiConfig = MidiConfig::None;
     const MIDI_OUTPUT: MidiConfig = MidiConfig::None;
 
-    // nih-plug splits the host buffer at automation points and calls `process()` once per
+    // nice-plug splits the host buffer at automation points and calls `process()` once per
     // sub-block, so "read Drive once per process() call" stays sample accurate.
     const SAMPLE_ACCURATE_AUTOMATION: bool = true;
 
+    // No custom GUI for now: the host shows its generic parameter view.
+    type Editor = ();
     type SysExMessage = ();
     type BackgroundTask = ();
 
@@ -148,15 +141,11 @@ impl Plugin for IabSaturator {
         self.params.clone()
     }
 
-    fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
-        editor::create(self.params.clone())
-    }
-
-    fn initialize(
+    fn activate(
         &mut self,
         _audio_io_layout: &AudioIOLayout,
         buffer_config: &BufferConfig,
-        _context: &mut impl InitContext<Self>,
+        _context: &mut impl ActivateContext<Self>,
     ) -> bool {
         // fs is only needed to compute the smoother coefficient. Nothing else to allocate.
         self.drive_smoother
@@ -192,6 +181,7 @@ impl Plugin for IabSaturator {
 }
 
 impl ClapPlugin for IabSaturator {
+    // Never change it: hosts use it to find the plugin in saved projects.
     const CLAP_ID: &'static str = "com.ivanamon.iab-saturator";
     const CLAP_DESCRIPTION: Option<&'static str> = Some("Mono-curve tanh saturator");
     const CLAP_MANUAL_URL: Option<&'static str> = Some(Self::URL);
@@ -216,16 +206,5 @@ impl Vst3Plugin for IabSaturator {
         &[Vst3SubCategory::Fx, Vst3SubCategory::Distortion];
 }
 
-nih_export_clap!(IabSaturator);
-
-/// `nih_export_vst3!` expands nih-plug's `vst3_com::vtable` macro, which trips the
-/// `semicolon_in_expressions_from_non_local_macros` future-compat lint at this call site.
-/// Upstream code, not ours: allow that one lint only here so `clippy -D warnings` passes.
-/// The `#[no_mangle]` entry points are still exported from inside this module.
-#[allow(semicolon_in_expressions_from_non_local_macros)]
-mod vst3_export {
-    use super::IabSaturator;
-    use nih_plug::prelude::*;
-
-    nih_export_vst3!(IabSaturator);
-}
+nice_export_clap!(IabSaturator);
+nice_export_vst3!(IabSaturator);

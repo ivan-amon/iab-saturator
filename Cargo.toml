@@ -1,7 +1,8 @@
 [package]
 name = "iab_saturator"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+rust-version = "1.88"
 authors = ["Ivan Amon Bystrova <ivan.amon.dev@gmail.com>"]
 license = "GPL-3.0-or-later"
 homepage = "https://youtu.be/dQw4w9WgXcQ"
@@ -16,40 +17,7 @@ crate-type = ["cdylib"]
 [dependencies]
 # Remove the `assert_process_allocs` feature to allow allocations on the audio
 # thread in debug builds.
-nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", features = ["assert_process_allocs"] }
-# Uncomment the below line to disable the on-by-default VST3 feature to remove
-# the GPL compatibility requirement
-# nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", default-features = false, features = ["assert_process_allocs"] }
-
-# GUI. `nih_plug_egui` provides `EguiState` (persisted window size) and re-exports egui.
-# The window itself is our own small editor (src/editor/window.rs) built on egui-baseview, so
-# it only renders when something changed. egui-baseview and baseview are pinned to the exact
-# revisions nih_plug_egui uses, so Cargo resolves a single egui version.
-nih_plug_egui = { git = "https://github.com/robbert-vdh/nih-plug.git", default-features = false, features = ["opengl"] }
-egui-baseview = { git = "https://github.com/BillyDM/egui-baseview.git", rev = "ec70c3fe6b2f070dcacbc22924431edbe24bd1c0", default-features = false, features = ["opengl"] }
-baseview = { git = "https://github.com/RustAudio/baseview.git", rev = "9a0b42c09d712777b2edb4c5e0cb6baf21e988f0" }
-raw-window-handle = "0.5"
-# Asset decoding (GUI thread only).
-png = "0.17"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-
-[dev-dependencies]
-# Glyph outlines, to check rendered text size in tests (already used by egui's text renderer).
-ab_glyph = "0.2"
-
-# Optimize the PNG decoder in debug builds too: the 4096×2048 sprite sheet takes seconds to
-# decode at opt-level 0 (editor open in debug builds, and the pixel tests).
-[profile.dev.package.png]
-opt-level = 3
-[profile.dev.package.fdeflate]
-opt-level = 3
-[profile.dev.package.miniz_oxide]
-opt-level = 3
-[profile.dev.package.crc32fast]
-opt-level = 3
-[profile.dev.package.simd-adler32]
-opt-level = 3
+nice-plug = { version = "0.4.2", features = ["assert_process_allocs"] }
 
 [profile.release]
 lto = "thin"
