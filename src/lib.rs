@@ -9,18 +9,19 @@ mod dsp;
 mod editor;
 mod params;
 
-use dsp::{curve::curve, db::db_to_gain, drive::drive, smoother::Smoother};
+use dsp::{curve::curve, db::db_to_gain, drive::drive, output::output, smoother::Smoother};
 use editor::{IabEditor, Layout};
 use params::IabSaturatorParams;
 
-/// Time constant of the Drive smoother, τ in ms.
-const DRIVE_SMOOTHING_TAU_MS: f32 = 10.0;
+/// Time constant of the smoother, τ in ms.
+const SMOOTHING_TAU_MS: f32 = 10.0;
 
 struct IabSaturator {
     params: Arc<IabSaturatorParams>,
     /// One shared smoother for the linear drive gain (Drive is a single parameter for all
     /// channels). Persists across buffers.
     drive_smoother: Smoother,
+    output_smoother: Smoother,
     /// Window size and open/closed state, shared with nice-plug-egui.
     editor_state: Arc<EguiEditorState>,
     /// Handed to nice-plug-egui by `editor()`. `None` if layout.json failed to parse: the
@@ -44,6 +45,7 @@ impl Default for IabSaturator {
         Self {
             params,
             drive_smoother: Smoother::default(),
+            output_smoother: Smoother::default(),
             editor_state: EguiEditorState::from_size(size, 1.0),
             editor,
         }
@@ -104,7 +106,9 @@ impl Plugin for IabSaturator {
     ) -> bool {
         // fs is only needed to compute the smoother coefficient. Nothing else to allocate.
         self.drive_smoother
-            .set_sample_rate(buffer_config.sample_rate, DRIVE_SMOOTHING_TAU_MS);
+            .set_sample_rate(buffer_config.sample_rate, SMOOTHING_TAU_MS);
+        self.output_smoother
+            .set_sample_rate(buffer_config.sample_rate, SMOOTHING_TAU_MS);
         true
     }
 
@@ -112,6 +116,8 @@ impl Plugin for IabSaturator {
         // Audio thread: no allocations. Snap gs to the current g so there is no ramp.
         self.drive_smoother
             .reset(db_to_gain(self.params.drive.value()));
+        self.output_smoother
+            .reset(db_to_gain(self.params.output.value()));
     }
 
     fn process(
@@ -122,12 +128,14 @@ impl Plugin for IabSaturator {
     ) -> ProcessStatus {
         // Read Drive once per buffer: g[n] is a staircase, the smoother makes it continuous.
         let g = db_to_gain(self.params.drive.value());
+        let g_out = db_to_gain(self.params.output.value());
 
         // Per frame, then per channel. Time order within each channel is preserved.
         for channel_samples in buffer.iter_samples() {
             let gs = self.drive_smoother.next(g);
+            let g_out_s = self.output_smoother.next(g_out);
             for sample in channel_samples {
-                *sample = curve(drive(gs, *sample));
+                *sample = output(g_out_s, curve(drive(gs, *sample)));
             }
         }
 

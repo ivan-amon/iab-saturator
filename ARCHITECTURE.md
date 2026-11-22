@@ -41,6 +41,7 @@ iab_saturator/
 │   │   ├── db.rs            # memoryless dB → linear gain
 │   │   ├── drive.rs         # memoryless gain
 │   │   ├── curve.rs         # memoryless waveshaper (tanh)
+│   │   ├── output.rs        # final attenuation
 │   │   ├── smoother.rs      # one-pole LPF, has state
 │   │   └── harmonics_test.rs # DFT test of drive + curve (test-only)
 │   └── editor/              # GUI (nice-plug-egui), reads/writes parameters only
@@ -68,7 +69,7 @@ IDs are stored in saved projects and automation: they never change.
 | ID             | Name         | Range     | Default   | Unit | Readout     | Status                  |
 |----------------|--------------|-----------|-----------|------|-------------|-------------------------|
 | `drive`        | Drive        | 0 … +36   | 0         | dB   | `+15.0 dB`  | wired to DSP            |
-| `output`       | Output       | −36 … 0   | 0         | dB   | `−6.0 dB`   | declared, not wired yet |
+| `output`       | Output       | −36 … 0   | 0         | dB   | `−6.0 dB`   | wired to DSP            |
 | `dry_wet`      | Dry/Wet      | 0 … 100   | 100       | %    | `75 %`      | declared, not wired yet |
 | `curve`        | Curve        | enum (7)  | SOFT CLIP | —    | `SOFT CLIP` | declared, not wired yet |
 | `oversampling` | Oversampling | enum (4)  | OFF       | —    | `4×`        | declared, not wired yet |
