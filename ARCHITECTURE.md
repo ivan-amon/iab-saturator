@@ -1,32 +1,76 @@
 # IAB-Saturator — Architecture
 
-Mono-curve saturator: one Drive knob into a tanh waveshaper. VST3 + CLAP via nice-plug.
+Mono-curve saturator: Drive into a tanh waveshaper, then Dry/Wet mix and Output gain.
+VST3 + CLAP via nice-plug.
 
 ## Signal flow
 
+### Control path (every continuous knob)
+
+Every knob that reaches the audio follows the same path, with its own `Smoother` instance
+(same τ for all). The audio path only ever sees the smoothed value ps[n].
+
 ```text
-                    D (dB)  ← knob (atomic, read in process())
+                      P  ← knob (atomic, read once per buffer in process())
                       │
                       ▼
                ┌─────────────┐
-               │ g=10^(D/20) │   dB → linear
+               │   Convert   │   memoryless: to the unit the audio block expects
                └──────┬──────┘
-                      │ g[n]   (staircase)
+                      │ p[n]   (staircase)
                       ▼
                ┌─────────────┐
                │  Smoother   │   one-pole LPF, has state, shared by all channels
-               │             │   gs[n] = (1-a)·g[n] + a·gs[n-1]
+               │             │   ps[n] = (1-a)·p[n] + a·ps[n-1]
                │             │   a = e^(-1/(τ·fs))
                └──────┬──────┘
-                      │ gs[n]  (smooth)
+                      │ ps[n]  (smooth)
                       ▼
- x[n]          ┌─────────────┐   v[n]    ┌─────────────┐    y[n]
-──────────────►│    Drive    ├──────────►│    Curve    ├──────────►
- (per channel) │ v = gs · x  │           │ y = tanh(v) │  (per channel)
-               └─────────────┘           └─────────────┘
-                memoryless                 memoryless
-                (product of 2 signals)     (static nonlinearity)
 ```
+
+| Knob    | P      | Convert            | ps[n] (name in `lib.rs`) |
+|---------|--------|--------------------|--------------------------|
+| Drive   | D (dB) | g = 10^(D/20)      | `gs`                     |
+| Dry/Wet | M (%)  | m = M/100          | `ms`                     |
+| Output  | O (dB) | g_out = 10^(O/20)  | `g_out_s`                |
+
+A new knob that reaches the audio gets its own `Smoother` and a row in this table.
+
+### Audio path (per channel)
+
+```text
+                            x[n]  (per channel)
+                            │
+                            ├───────────────────────┐ dry
+                            ▼                       │
+               ┌─────────────────────────┐          │
+       gs ────►│          Drive          │          │
+               │       v = gs · x        │          │
+               └────────────┬────────────┘          │
+                            │ v[n]                  │
+                            ▼                       │
+               ┌─────────────────────────┐          │
+               │          Curve          │          │
+               │       y = tanh(v)       │          │
+               └────────────┬────────────┘          │
+                            │ y[n]  (wet)           │
+                            ▼                       │
+               ┌─────────────────────────┐          │
+       ms ────►│           Mix           │◄─────────┘
+               │   w = (1-ms)·x + ms·y   │
+               └────────────┬────────────┘
+                            │ w[n]
+                            ▼
+               ┌─────────────────────────┐
+  g_out_s ────►│         Output          │
+               │   y_out = g_out_s · w   │
+               └────────────┬────────────┘
+                            │ y_out[n]  (per channel)
+                            ▼
+```
+
+All four audio blocks are memoryless: Drive, Mix and Output are products of signals,
+Curve is a static nonlinearity. The dry signal is the input x[n] before Drive.
 
 ## Crate layout
 
@@ -41,8 +85,9 @@ iab_saturator/
 │   │   ├── db.rs            # memoryless dB → linear gain
 │   │   ├── drive.rs         # memoryless gain
 │   │   ├── curve.rs         # memoryless waveshaper (tanh)
-│   │   ├── output.rs        # final attenuation
-│   │   ├── smoother.rs      # one-pole LPF, has state
+│   │   ├── mix.rs           # memoryless dry/wet crossfade
+│   │   ├── output.rs        # memoryless final attenuation
+│   │   ├── smoother.rs      # one-pole LPF, has state (one instance per knob)
 │   │   └── harmonics_test.rs # DFT test of drive + curve (test-only)
 │   └── editor/              # GUI (nice-plug-egui), reads/writes parameters only
 │       ├── mod.rs           # NiceEguiApp: open/close, input then paint each frame
@@ -70,7 +115,7 @@ IDs are stored in saved projects and automation: they never change.
 |----------------|--------------|-----------|-----------|------|-------------|-------------------------|
 | `drive`        | Drive        | 0 … +36   | 0         | dB   | `+15.0 dB`  | wired to DSP            |
 | `output`       | Output       | −36 … 0   | 0         | dB   | `−6.0 dB`   | wired to DSP            |
-| `dry_wet`      | Dry/Wet      | 0 … 100   | 100       | %    | `75 %`      | declared, not wired yet |
+| `dry_wet`      | Dry/Wet      | 0 … 100   | 100       | %    | `75 %`      | wired to DSP            |
 | `curve`        | Curve        | enum (7)  | SOFT CLIP | —    | `SOFT CLIP` | declared, not wired yet |
 | `oversampling` | Oversampling | enum (4)  | OFF       | —    | `4×`        | declared, not wired yet |
 | `auto_gain`    | Auto Gain    | bool      | off       | —    | —           | declared, not wired yet |
@@ -82,8 +127,9 @@ IDs are stored in saved projects and automation: they never change.
   of the DSP; the old ID is kept so saved projects load), `hard_clip` → HARD CLIP,
   `warm` → WARM, `tube` → TUBE, `fold` → FOLD, `rectify` → RECTIFY, `bit_crush` → BIT CRUSH.
 - Oversampling variants: `off` → OFF, `x2` → 2×, `x4` → 4×, `x8` → 8×.
-- The GUI changes every parameter; only Drive reaches the audio.
-- Output and Dry/Wet get a smoother when they are wired (not before: there is no audio path).
+- The GUI changes every parameter; Drive, Dry/Wet and Output reach the audio, each through
+  its own smoother (see Signal flow › Control path).
+- Dry/Wet is stored in % (what the host shows) and converted to [0, 1] before its smoother.
 
 ## Editor
 
@@ -120,15 +166,15 @@ IDs are stored in saved projects and automation: they never change.
 
 | Host call      | Thread | What we do                                                        |
 |----------------|--------|-------------------------------------------------------------------|
-| `activate()`   | main   | Store fs, compute `a = e^(-1/(τ·fs))`, allocate everything        |
-| `reset()`      | audio  | Reset smoother state (snap gs to current g)                       |
-| `process()`    | audio  | Per sample: gs = smoother.next(g); per channel: y = tanh(gs · x)  |
+| `activate()`   | main   | Store fs, compute `a = e^(-1/(τ·fs))` for every smoother, allocate everything |
+| `reset()`      | audio  | Snap every smoother to its current converted value p (no ramp)    |
+| `process()`    | audio  | Per frame: advance every smoother; per channel: audio path        |
 
 ## State
 
-- Smoother: one shared instance (Drive is a single parameter for both channels),
-  persists across buffers.
-- Drive and Curve: stateless (pure functions), applied to each channel.
+- Smoothers: one instance per knob (Drive, Dry/Wet, Output), each shared by both channels
+  (a knob is a single parameter), persisting across buffers.
+- Drive, Curve, Mix and Output: stateless (pure functions), applied to each channel.
 - Any future block that filters audio (oversampling, emphasis filters):
   one instance per channel.
 
@@ -143,18 +189,21 @@ All memory is allocated in `activate()`. See CLAUDE.md for the full rules.
 - Odd curve ⇒ only odd harmonics (f0, 3f0, 5f0, …) for a sine input.
 - Small signal (|g·x| ≪ 1): transparent, y ≈ g·x.
 - Large signal: tends to a square wave, a_k = 2/(πk)·(-1)^((k-1)/2).
-- Harmonic levels (dBc) must match the reference values in the notes.
-- Moving Drive must not produce clicks or zipper noise.
+- Harmonic levels (dBc) must match the reference values in the notes (Dry/Wet at 100 %,
+  Output at 0 dB).
+- Dry/Wet at 0 %: no harmonics, the output is the input scaled by the Output gain.
+- Moving any knob must not produce clicks or zipper noise.
 
 ## Known limitations
 
 - No oversampling: harmonics above fs/2 alias. Audible with high Drive and high f0.
-- No output gain: loudness rises with Drive until the curve limits it.
+- No auto gain: loudness rises with Drive until the curve limits it; Output compensates
+  only by hand.
 - Channels processed independently (no stereo linking).
 
 ## Roadmap
 
 1. Oversampling around the curve (report latency to host).
-2. Output gain / auto gain compensation.
+2. Auto gain compensation.
 3. Asymmetric curve (bias) ⇒ even harmonics.
 4. Pre/de-emphasis filters around the curve (from eq-rs).

@@ -5,10 +5,13 @@
 //! - `smoother`: one-pole LPF on the linear gain (has state)
 //! - `drive`: gain stage (memoryless)
 //! - `curve`: tanh waveshaper (memoryless)
+//! - `mix`: dry/wet signal
+//! - `output`: final attenuation
 
 pub mod curve;
 pub mod db;
 pub mod drive;
+pub mod mix;
 pub mod output;
 pub mod smoother;
 

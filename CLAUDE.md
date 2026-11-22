@@ -53,13 +53,15 @@ Read ARCHITECTURE.md before touching code.
 - Drive in dB, linear gain g = 10^(D/20)
 
 ## Current scope
-- DSP: Drive knob + tanh curve, wired. No oversampling.
-- Output, Dry/Wet, Curve, Oversampling and Auto Gain exist as parameters and in the GUI,
+- DSP: Drive → tanh curve → Dry/Wet mix → Output, wired, each knob through its own
+  smoother. No oversampling.
+- Curve, Oversampling and Auto Gain exist as parameters and in the GUI,
   but are NOT wired to the DSP yet. Do not wire them until asked.
 - GUI: nice-plug-egui editor from layout.json. VU needles rest until the meters get a
   detector (DSP to be designed).
 
 ## Verification
 - Sine in → Spectrum after the plugin. Only odd harmonics must appear.
-- Compare harmonic levels (dBc) against the values predicted in my notes.
+- Compare harmonic levels (dBc) against the values predicted in my notes
+  (Dry/Wet at 100 %, Output at 0 dB).
 - GUI: every knob position matches the panel scale (−135° at minimum, +135° at maximum).

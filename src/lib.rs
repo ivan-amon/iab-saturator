@@ -13,6 +13,8 @@ use dsp::{curve::curve, db::db_to_gain, drive::drive, output::output, smoother::
 use editor::{IabEditor, Layout};
 use params::IabSaturatorParams;
 
+use crate::dsp::mix::mix;
+
 /// Time constant of the smoother, τ in ms.
 const SMOOTHING_TAU_MS: f32 = 10.0;
 
@@ -22,6 +24,7 @@ struct IabSaturator {
     /// channels). Persists across buffers.
     drive_smoother: Smoother,
     output_smoother: Smoother,
+    mix_smoother: Smoother,
     /// Window size and open/closed state, shared with nice-plug-egui.
     editor_state: Arc<EguiEditorState>,
     /// Handed to nice-plug-egui by `editor()`. `None` if layout.json failed to parse: the
@@ -46,6 +49,7 @@ impl Default for IabSaturator {
             params,
             drive_smoother: Smoother::default(),
             output_smoother: Smoother::default(),
+            mix_smoother: Smoother::default(),
             editor_state: EguiEditorState::from_size(size, 1.0),
             editor,
         }
@@ -109,6 +113,8 @@ impl Plugin for IabSaturator {
             .set_sample_rate(buffer_config.sample_rate, SMOOTHING_TAU_MS);
         self.output_smoother
             .set_sample_rate(buffer_config.sample_rate, SMOOTHING_TAU_MS);
+        self.mix_smoother
+            .set_sample_rate(buffer_config.sample_rate, SMOOTHING_TAU_MS);
         true
     }
 
@@ -118,6 +124,7 @@ impl Plugin for IabSaturator {
             .reset(db_to_gain(self.params.drive.value()));
         self.output_smoother
             .reset(db_to_gain(self.params.output.value()));
+        self.mix_smoother.reset(self.params.dry_wet.value() / 100.0);
     }
 
     fn process(
@@ -129,13 +136,15 @@ impl Plugin for IabSaturator {
         // Read Drive once per buffer: g[n] is a staircase, the smoother makes it continuous.
         let g = db_to_gain(self.params.drive.value());
         let g_out = db_to_gain(self.params.output.value());
+        let m = self.params.dry_wet.value() / 100.0; // Because m in the GUI it's in %
 
         // Per frame, then per channel. Time order within each channel is preserved.
         for channel_samples in buffer.iter_samples() {
             let gs = self.drive_smoother.next(g);
             let g_out_s = self.output_smoother.next(g_out);
+            let ms = self.mix_smoother.next(m);
             for sample in channel_samples {
-                *sample = output(g_out_s, curve(drive(gs, *sample)));
+                *sample = output(g_out_s, mix(ms, *sample, curve(drive(gs, *sample))));
             }
         }
 
