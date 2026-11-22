@@ -1,0 +1,1883 @@
+{
+  "meta": {
+    "name": "IAB-Saturator GUI layout",
+    "version": 2,
+    "units": "px at 1x; origin top-left; y grows down; angles in degrees, 0 = 12 o'clock, positive = clockwise",
+    "panel": {
+      "w": 840,
+      "h": 500
+    },
+    "render_scale": 2,
+    "render_size": {
+      "w": 1680,
+      "h": 1000
+    },
+    "source": "Measured on mockup 'Interfaz_Saturator_Curves_en_Beige.png' (panel 1529x928 px scaled to 840x500), rounded to integer px, snapped to main axis x=520 and the sidebar axis (sidebar centre). Clearances (labels vs LEDs, VU labels vs ticks, sidebar width, footer) are solved by formula in gen_layout.py.",
+    "blender_mapping": "1 Blender unit = 1 px. Blender X = x, Blender Y = -y, Z up; panel surface at Z = 0.",
+    "sprite_convention": "Every sprite is centred on its element's (cx, cy) and covers its 'sprite' box at 1x; PNG size = sprite box x render_scale. Rotating sprites rotate about their centre.",
+    "text_convention": "Roboto Slab. 'x' is the anchor x (start/middle/end), 'cy' the vertical centre of the cap-height block (all lines). 'box' is the measured ink box from font advances (kerning ignored). Lines are separated by line_height_em x size."
+  },
+  "palette": {
+    "cream": "#d5cbb1",
+    "ink": "#292824",
+    "rust": "#a44735",
+    "mustard": "#d69a35",
+    "olive": "#77796c",
+    "_note": "Brand palette (logo, web). The GUI uses 'colors'."
+  },
+  "colors": {
+    "_note": "sRGB hex measured on the mockup (averaged 9x9 px, lit flat areas). Render materials and egui use these.",
+    "panel": "#dfc3a1",
+    "sidebar": "#1f1d19",
+    "ink": "#1c1a16",
+    "cream_text": "#dcc6a6",
+    "label_red": "#a8281c",
+    "red_zone": "#b4482c",
+    "knob_cap_red": "#b73025",
+    "knob_metal": "#7a7064",
+    "knob_cap_black": "#2e2a25",
+    "pointer_line": "#efe3cc",
+    "selector_metal": "#776b5d",
+    "selector_bar": "#2e2a25",
+    "well": "#1d1914",
+    "vu_face": "#f5d29a",
+    "vu_face_edge": "#8a6440",
+    "curve_dot_off": "#d3b89c",
+    "vu_bezel": "#2a2621",
+    "pill": "#24211c",
+    "lit_red": "#ff3b1f",
+    "lens_off": "#5a1a12",
+    "screw": "#4a443c"
+  },
+  "fonts": {
+    "family": "Roboto Slab",
+    "files": {
+      "500": "RobotoSlab-Medium.ttf",
+      "600": "RobotoSlab-SemiBold.ttf",
+      "700": "RobotoSlab-Bold.ttf"
+    },
+    "cap_height_em": 0.7109,
+    "line_height_em": 1.2,
+    "readouts": "Roboto Slab 600, embedded in the plugin; drawn live by egui"
+  },
+  "relief": {
+    "_note": "Blender only (depths in px). egui ignores this block.",
+    "panel_bevel": 8,
+    "panel_thickness": 12,
+    "panel_corner_r": 12,
+    "frame": {
+      "w": 8,
+      "h": 1.5,
+      "groove_w": 1.5,
+      "groove_depth": 1.0
+    },
+    "sidebar_depth": 2.5,
+    "sidebar_corner_r": 6,
+    "well_depth": 2.0,
+    "pill_depth": 1.5,
+    "recess_rim_bevel": 0.8,
+    "print_z": 0.03
+  },
+  "static": {
+    "sidebar": {
+      "x": 10,
+      "y": 10,
+      "w": 222,
+      "h": 476,
+      "color": "sidebar",
+      "_note": "w = 2*ceil(max curve-label reach from the axis + SB_EDGE); axis x = x + w/2"
+    },
+    "logo": {
+      "x": 40,
+      "y": 46,
+      "w": 126,
+      "h": 32.14,
+      "source": "iab-logo.svg",
+      "colors": {
+        "IAB": "cream_text",
+        "slashes": "knob_cap_red"
+      },
+      "note": "Import the SVG as curves, scale to w. Flat printed paint, no relief."
+    },
+    "header_rules": [
+      {
+        "x1": 40,
+        "x2": 81.07,
+        "y": 155,
+        "w": 1,
+        "color": "cream_text"
+      },
+      {
+        "x1": 160.93,
+        "x2": 202,
+        "y": 155,
+        "w": 1,
+        "color": "cream_text"
+      }
+    ],
+    "sidebar_rules": [
+      {
+        "x1": 40,
+        "x2": 202,
+        "y": 425,
+        "w": 1,
+        "color": "cream_text"
+      }
+    ],
+    "footer_divider": {
+      "x": 121.0,
+      "y1": 439,
+      "y2": 457,
+      "w": 1,
+      "color": "cream_text"
+    },
+    "main_dividers": [
+      {
+        "x": 394,
+        "y1": 183,
+        "y2": 374,
+        "w": 1,
+        "color": "ink"
+      },
+      {
+        "x": 646,
+        "y1": 183,
+        "y2": 374,
+        "w": 1,
+        "color": "ink"
+      }
+    ],
+    "bottom_rule": {
+      "x1": 249,
+      "x2": 811,
+      "y": 418,
+      "w": 1,
+      "color": "ink"
+    },
+    "bottom_dividers": [
+      {
+        "x": 612,
+        "y1": 435,
+        "y2": 461,
+        "w": 1,
+        "color": "ink"
+      }
+    ],
+    "screws": [
+      {
+        "cx": 28,
+        "cy": 28,
+        "slot_deg": 45
+      },
+      {
+        "cx": 812,
+        "cy": 28,
+        "slot_deg": -30
+      },
+      {
+        "cx": 28,
+        "cy": 472,
+        "slot_deg": 60
+      },
+      {
+        "cx": 812,
+        "cy": 472,
+        "slot_deg": 15
+      }
+    ],
+    "screw": {
+      "d": 16,
+      "dome_h": 2.5,
+      "slot_w": 1.8,
+      "color": "screw"
+    }
+  },
+  "knobs": [
+    {
+      "id": "drive",
+      "param": "drive",
+      "label": "DRIVE",
+      "cx": 520,
+      "cy": 238,
+      "body_d": 172,
+      "cap_d": 126,
+      "well_d": 184,
+      "sprite": {
+        "w": 216,
+        "h": 216
+      },
+      "cap_color": "knob_cap_red",
+      "skirt_color": "knob_metal",
+      "pointer": {
+        "w": 4.0,
+        "r_from": 26,
+        "r_to": 61,
+        "color": "pointer_line"
+      },
+      "range": {
+        "min": 0,
+        "max": 36,
+        "unit": "dB",
+        "default": 0
+      },
+      "sweep": {
+        "from": -135,
+        "to": 135
+      },
+      "scale": {
+        "r_inner": 100,
+        "r_minor": 106,
+        "r_major": 116,
+        "w_minor": 2.0,
+        "w_major": 3.0,
+        "count": 13,
+        "major_every": 3,
+        "color": "ink"
+      },
+      "label_text": {
+        "id": "label_drive",
+        "text": "DRIVE",
+        "weight": 700,
+        "size": 16,
+        "tracking_em": 0.25,
+        "line_height_em": 1.2,
+        "color": "label_red",
+        "anchor": "middle",
+        "x": 520,
+        "cy": 352,
+        "layer": "bg",
+        "box": {
+          "x": 487.04,
+          "y": 346.31,
+          "w": 65.93,
+          "h": 11.38
+        }
+      },
+      "readout": {
+        "cx": 520,
+        "cy": 384,
+        "w": 100,
+        "h": 26,
+        "format": "{:+.1} dB",
+        "color": "pill",
+        "text_color": "cream_text"
+      },
+      "geometry": {
+        "skirt_h_outer": 4.0,
+        "skirt_h_inner": 14.0,
+        "skirt_chamfer": 1.5,
+        "ribs": 160,
+        "rib_depth": 1.6,
+        "rib_band": 22.0,
+        "cap_h": 30.0,
+        "cap_bevel": 4.0,
+        "cap_dome": 1.5
+      }
+    },
+    {
+      "id": "mix",
+      "param": "dry_wet",
+      "label": "DRY / WET",
+      "cx": 314,
+      "cy": 268,
+      "body_d": 88,
+      "cap_d": 54,
+      "well_d": 96,
+      "sprite": {
+        "w": 120,
+        "h": 120
+      },
+      "cap_color": "knob_cap_black",
+      "skirt_color": "knob_metal",
+      "pointer": {
+        "w": 2.6,
+        "r_from": 11,
+        "r_to": 26,
+        "color": "pointer_line"
+      },
+      "range": {
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "default": 100
+      },
+      "sweep": {
+        "from": -135,
+        "to": 135
+      },
+      "scale": {
+        "r_inner": 50,
+        "r_minor": 54,
+        "r_major": 60,
+        "w_minor": 1.6,
+        "w_major": 2.4,
+        "count": 13,
+        "major_every": 3,
+        "color": "ink"
+      },
+      "label_text": {
+        "id": "label_mix",
+        "text": "DRY / WET",
+        "weight": 700,
+        "size": 13,
+        "tracking_em": 0.08,
+        "line_height_em": 1.2,
+        "color": "ink",
+        "anchor": "middle",
+        "x": 314,
+        "cy": 339,
+        "layer": "bg",
+        "box": {
+          "x": 274.8,
+          "y": 334.38,
+          "w": 78.4,
+          "h": 9.24
+        }
+      },
+      "readout": {
+        "cx": 314,
+        "cy": 368,
+        "w": 64,
+        "h": 22,
+        "format": "{:.0} %",
+        "color": "pill",
+        "text_color": "cream_text"
+      },
+      "geometry": {
+        "skirt_h_outer": 3.0,
+        "skirt_h_inner": 8.0,
+        "skirt_chamfer": 1.0,
+        "ribs": 96,
+        "rib_depth": 1.0,
+        "rib_band": 15.0,
+        "cap_h": 19.0,
+        "cap_bevel": 2.5,
+        "cap_dome": 0.8
+      }
+    },
+    {
+      "id": "output",
+      "param": "output",
+      "label": "OUTPUT",
+      "cx": 726,
+      "cy": 268,
+      "body_d": 88,
+      "cap_d": 54,
+      "well_d": 96,
+      "sprite": {
+        "w": 120,
+        "h": 120
+      },
+      "cap_color": "knob_cap_black",
+      "skirt_color": "knob_metal",
+      "pointer": {
+        "w": 2.6,
+        "r_from": 11,
+        "r_to": 26,
+        "color": "pointer_line"
+      },
+      "range": {
+        "min": -36,
+        "max": 0,
+        "unit": "dB",
+        "default": 0
+      },
+      "sweep": {
+        "from": -135,
+        "to": 135
+      },
+      "scale": {
+        "r_inner": 50,
+        "r_minor": 54,
+        "r_major": 60,
+        "w_minor": 1.6,
+        "w_major": 2.4,
+        "count": 13,
+        "major_every": 3,
+        "color": "ink"
+      },
+      "label_text": {
+        "id": "label_output",
+        "text": "OUTPUT",
+        "weight": 700,
+        "size": 13,
+        "tracking_em": 0.08,
+        "line_height_em": 1.2,
+        "color": "ink",
+        "anchor": "middle",
+        "x": 726,
+        "cy": 339,
+        "layer": "bg",
+        "box": {
+          "x": 695.92,
+          "y": 334.38,
+          "w": 60.16,
+          "h": 9.24
+        }
+      },
+      "readout": {
+        "cx": 726,
+        "cy": 368,
+        "w": 76,
+        "h": 22,
+        "format": "{:.1} dB (U+2212 minus)",
+        "color": "pill",
+        "text_color": "cream_text"
+      },
+      "geometry": {
+        "skirt_h_outer": 3.0,
+        "skirt_h_inner": 8.0,
+        "skirt_chamfer": 1.0,
+        "ribs": 96,
+        "rib_depth": 1.0,
+        "rib_band": 15.0,
+        "cap_h": 19.0,
+        "cap_bevel": 2.5,
+        "cap_dome": 0.8
+      }
+    }
+  ],
+  "selector": {
+    "id": "curve",
+    "param": "curve",
+    "cx": 121.0,
+    "cy": 265,
+    "body_d": 72,
+    "well_d": 82,
+    "sprite": {
+      "w": 120,
+      "h": 120
+    },
+    "skirt_color": "selector_metal",
+    "bar": {
+      "back": {
+        "y": -14,
+        "r": 10
+      },
+      "tip": {
+        "y": 28,
+        "r": 4.5
+      },
+      "h": 14,
+      "bevel": 3.5,
+      "color": "selector_bar",
+      "line": {
+        "w": 2.4,
+        "from": 2,
+        "to": 28,
+        "color": "pointer_line"
+      },
+      "_note": "Tapered bar = hull of two circles on the local +y axis (up at 0 deg)."
+    },
+    "geometry": {
+      "skirt_h_outer": 3.0,
+      "skirt_h_inner": 7.0,
+      "skirt_chamfer": 1.0,
+      "ribs": 0,
+      "rib_depth": 0,
+      "rib_band": 6.0,
+      "cap_d": 40,
+      "cap_h": 9.0,
+      "cap_bevel": 2.0,
+      "cap_dome": 1.5
+    },
+    "header": "curves_header",
+    "positions": [
+      {
+        "index": 0,
+        "value": "SOFT CLIP",
+        "angle": -135,
+        "led": {
+          "cx": 87.06,
+          "cy": 298.94
+        },
+        "label": {
+          "id": "curve_label_0",
+          "text": "SOFT\nCLIP",
+          "weight": 600,
+          "size": 10,
+          "tracking_em": 0.04,
+          "line_height_em": 1.2,
+          "color": "cream_text",
+          "anchor": "middle",
+          "x": 69.48,
+          "cy": 316.52,
+          "layer": "bg",
+          "box": {
+            "x": 55.89,
+            "y": 306.97,
+            "w": 27.18,
+            "h": 19.11
+          }
+        },
+        "label_sprite": {
+          "cx": 69.48,
+          "cy": 316.53,
+          "w": 40,
+          "h": 32
+        }
+      },
+      {
+        "index": 1,
+        "value": "HARD CLIP",
+        "angle": -90,
+        "led": {
+          "cx": 73.0,
+          "cy": 265.0
+        },
+        "label": {
+          "id": "curve_label_1",
+          "text": "HARD\nCLIP",
+          "weight": 600,
+          "size": 10,
+          "tracking_em": 0.04,
+          "line_height_em": 1.2,
+          "color": "cream_text",
+          "anchor": "middle",
+          "x": 49.43,
+          "cy": 265.0,
+          "layer": "bg",
+          "box": {
+            "x": 34.36,
+            "y": 255.45,
+            "w": 30.14,
+            "h": 19.11
+          }
+        },
+        "label_sprite": {
+          "cx": 49.43,
+          "cy": 265.0,
+          "w": 44,
+          "h": 32
+        }
+      },
+      {
+        "index": 2,
+        "value": "WARM",
+        "angle": -45,
+        "led": {
+          "cx": 87.06,
+          "cy": 231.06
+        },
+        "label": {
+          "id": "curve_label_2",
+          "text": "WARM",
+          "weight": 600,
+          "size": 10,
+          "tracking_em": 0.04,
+          "line_height_em": 1.2,
+          "color": "cream_text",
+          "anchor": "middle",
+          "x": 70.24,
+          "cy": 214.24,
+          "layer": "bg",
+          "box": {
+            "x": 52.18,
+            "y": 210.69,
+            "w": 36.13,
+            "h": 7.11
+          }
+        },
+        "label_sprite": {
+          "cx": 70.25,
+          "cy": 214.25,
+          "w": 50,
+          "h": 20
+        }
+      },
+      {
+        "index": 3,
+        "value": "TUBE",
+        "angle": 0,
+        "led": {
+          "cx": 121.0,
+          "cy": 217.0
+        },
+        "label": {
+          "id": "curve_label_3",
+          "text": "TUBE",
+          "weight": 600,
+          "size": 10,
+          "tracking_em": 0.04,
+          "line_height_em": 1.2,
+          "color": "cream_text",
+          "anchor": "middle",
+          "x": 121.0,
+          "cy": 204.94,
+          "layer": "bg",
+          "box": {
+            "x": 106.76,
+            "y": 201.39,
+            "w": 28.49,
+            "h": 7.11
+          }
+        },
+        "label_sprite": {
+          "cx": 121.01,
+          "cy": 204.94,
+          "w": 42,
+          "h": 20
+        }
+      },
+      {
+        "index": 4,
+        "value": "FOLD",
+        "angle": 45,
+        "led": {
+          "cx": 154.94,
+          "cy": 231.06
+        },
+        "label": {
+          "id": "curve_label_4",
+          "text": "FOLD",
+          "weight": 600,
+          "size": 10,
+          "tracking_em": 0.04,
+          "line_height_em": 1.2,
+          "color": "cream_text",
+          "anchor": "middle",
+          "x": 169.5,
+          "cy": 216.5,
+          "layer": "bg",
+          "box": {
+            "x": 155.95,
+            "y": 212.95,
+            "w": 27.09,
+            "h": 7.11
+          }
+        },
+        "label_sprite": {
+          "cx": 169.49,
+          "cy": 216.5,
+          "w": 40,
+          "h": 20
+        }
+      },
+      {
+        "index": 5,
+        "value": "RECTIFY",
+        "angle": 90,
+        "led": {
+          "cx": 169.0,
+          "cy": 265.0
+        },
+        "label": {
+          "id": "curve_label_5",
+          "text": "RECTIFY",
+          "weight": 600,
+          "size": 10,
+          "tracking_em": 0.04,
+          "line_height_em": 1.2,
+          "color": "cream_text",
+          "anchor": "middle",
+          "x": 200.39,
+          "cy": 265.0,
+          "layer": "bg",
+          "box": {
+            "x": 177.5,
+            "y": 261.45,
+            "w": 45.79,
+            "h": 7.11
+          }
+        },
+        "label_sprite": {
+          "cx": 200.4,
+          "cy": 265.0,
+          "w": 58,
+          "h": 20
+        }
+      },
+      {
+        "index": 6,
+        "value": "BIT CRUSH",
+        "angle": 135,
+        "led": {
+          "cx": 154.94,
+          "cy": 298.94
+        },
+        "label": {
+          "id": "curve_label_6",
+          "text": "BIT\nCRUSH",
+          "weight": 600,
+          "size": 10,
+          "tracking_em": 0.04,
+          "line_height_em": 1.2,
+          "color": "cream_text",
+          "anchor": "middle",
+          "x": 174.79,
+          "cy": 318.79,
+          "layer": "bg",
+          "box": {
+            "x": 156.66,
+            "y": 309.24,
+            "w": 36.26,
+            "h": 19.11
+          }
+        },
+        "label_sprite": {
+          "cx": 174.79,
+          "cy": 318.8,
+          "w": 50,
+          "h": 32
+        }
+      }
+    ],
+    "default_index": 0,
+    "position_leds": {
+      "r": 48,
+      "d": 6,
+      "bezel_d": 9,
+      "label_gap": 4,
+      "sprite": {
+        "w": 22,
+        "h": 22
+      },
+      "off_color": "curve_dot_off"
+    },
+    "readout": {
+      "cx": 121.0,
+      "cy": 355,
+      "w": 96,
+      "h": 22,
+      "format": "{name}",
+      "style": "lit",
+      "color": "pill",
+      "text_color": "lit_red"
+    }
+  },
+  "meters": [
+    {
+      "id": "in",
+      "label": "IN",
+      "housing": {
+        "x": 257,
+        "y": 26,
+        "w": 240,
+        "h": 88,
+        "r": 12,
+        "color": "vu_bezel"
+      },
+      "face": {
+        "x": 265,
+        "y": 34,
+        "w": 224,
+        "h": 72,
+        "r": 6
+      },
+      "bezel": 8,
+      "pivot": {
+        "x": 377,
+        "y": 152
+      },
+      "needle_len": 118,
+      "needle_tail": 10,
+      "needle_w": {
+        "base": 2.0,
+        "tip": 0.9
+      },
+      "clip_to_face": true,
+      "label_text": {
+        "id": "meter_label_in",
+        "text": "IN",
+        "weight": 700,
+        "size": 16,
+        "tracking_em": 0.04,
+        "line_height_em": 1.2,
+        "color": "ink",
+        "anchor": "middle",
+        "x": 377,
+        "cy": 88,
+        "layer": "bg",
+        "box": {
+          "x": 367.63,
+          "y": 82.31,
+          "w": 18.75,
+          "h": 11.38
+        }
+      }
+    },
+    {
+      "id": "out",
+      "label": "OUT",
+      "housing": {
+        "x": 543,
+        "y": 26,
+        "w": 240,
+        "h": 88,
+        "r": 12,
+        "color": "vu_bezel"
+      },
+      "face": {
+        "x": 551,
+        "y": 34,
+        "w": 224,
+        "h": 72,
+        "r": 6
+      },
+      "bezel": 8,
+      "pivot": {
+        "x": 663,
+        "y": 152
+      },
+      "needle_len": 118,
+      "needle_tail": 10,
+      "needle_w": {
+        "base": 2.0,
+        "tip": 0.9
+      },
+      "clip_to_face": true,
+      "label_text": {
+        "id": "meter_label_out",
+        "text": "OUT",
+        "weight": 700,
+        "size": 16,
+        "tracking_em": 0.04,
+        "line_height_em": 1.2,
+        "color": "ink",
+        "anchor": "middle",
+        "x": 663,
+        "cy": 88,
+        "layer": "bg",
+        "box": {
+          "x": 645.21,
+          "y": 82.31,
+          "w": 35.58,
+          "h": 11.38
+        }
+      }
+    }
+  ],
+  "meter_geometry": {
+    "housing_h": 3.0,
+    "face_depth": 6.0,
+    "wall_w": 4.0,
+    "_note": "Face sits face_depth below the housing top (i.e. below the panel); the inner wall slopes over wall_w px so the recess is visible from the front."
+  },
+  "meter_scale": {
+    "type": "VU",
+    "angle_from_vu": "angle = -45 + 90 * 10^((vu - 3) / 20)",
+    "vu_ref_dbfs": -18,
+    "ballistics_ms": 300,
+    "rest_angle": -45,
+    "arc": {
+      "r": 92,
+      "w": 1.2,
+      "color": "ink"
+    },
+    "ticks": {
+      "minor": 5,
+      "major": 9,
+      "w_minor": 1.0,
+      "w_major": 1.6
+    },
+    "labels": {
+      "gap": 4,
+      "size": 10,
+      "weight": 500,
+      "color": "ink",
+      "_note": "each label box clears its major tick end by gap: r = arc.r + ticks.major + gap + extent(box, angle)"
+    },
+    "red_zone": {
+      "from_vu": 0,
+      "to_vu": 3,
+      "w": 4.0,
+      "color": "red_zone"
+    },
+    "marks": [
+      {
+        "vu": -20,
+        "angle": -38.6,
+        "label": "-20",
+        "label_r": 112.52
+      },
+      {
+        "vu": -10,
+        "angle": -24.9,
+        "label": "-10",
+        "label_r": 111.16
+      },
+      {
+        "vu": -7,
+        "angle": -16.5,
+        "label": "-7",
+        "label_r": 109.74
+      },
+      {
+        "vu": -5,
+        "angle": -9.2,
+        "label": "-5",
+        "label_r": 109.25
+      },
+      {
+        "vu": -3,
+        "angle": 0.1,
+        "label": "-3",
+        "label_r": 108.56
+      },
+      {
+        "vu": -2,
+        "angle": 5.6
+      },
+      {
+        "vu": -1,
+        "angle": 11.8
+      },
+      {
+        "vu": 0,
+        "angle": 18.7,
+        "label": "0",
+        "label_r": 109.28
+      },
+      {
+        "vu": 1,
+        "angle": 26.5
+      },
+      {
+        "vu": 2,
+        "angle": 35.2
+      },
+      {
+        "vu": 3,
+        "angle": 45.0,
+        "label": "+3",
+        "label_r": 111.36
+      }
+    ]
+  },
+  "bottom_bar": {
+    "cy": 448,
+    "oversampling": {
+      "param": "oversampling",
+      "label": "OVERSAMPLING",
+      "box": {
+        "x": 400,
+        "y": 435,
+        "w": 176,
+        "h": 27,
+        "r": 5,
+        "depth": 2.0,
+        "color": "pill"
+      },
+      "button": {
+        "inset_y": 3,
+        "gap": 1.5,
+        "r": 3,
+        "h": 1.6,
+        "press": 0.8,
+        "color": "pill"
+      },
+      "segments": [
+        {
+          "index": 0,
+          "text": "OFF",
+          "x": 400,
+          "w": 44,
+          "text_item": {
+            "id": "os_text_0",
+            "text": "OFF",
+            "weight": 600,
+            "size": 11,
+            "tracking_em": 0.04,
+            "line_height_em": 1.2,
+            "color": "cream_text",
+            "anchor": "middle",
+            "x": 422.0,
+            "cy": 448,
+            "layer": "bg",
+            "box": {
+              "x": 410.95,
+              "y": 444.09,
+              "w": 22.11,
+              "h": 7.82
+            }
+          }
+        },
+        {
+          "index": 1,
+          "text": "2×",
+          "x": 444,
+          "w": 44,
+          "text_item": {
+            "id": "os_text_1",
+            "text": "2×",
+            "weight": 600,
+            "size": 11,
+            "tracking_em": 0.04,
+            "line_height_em": 1.2,
+            "color": "cream_text",
+            "anchor": "middle",
+            "x": 466.0,
+            "cy": 448,
+            "layer": "bg",
+            "box": {
+              "x": 459.86,
+              "y": 444.09,
+              "w": 12.28,
+              "h": 7.82
+            }
+          }
+        },
+        {
+          "index": 2,
+          "text": "4×",
+          "x": 488,
+          "w": 44,
+          "text_item": {
+            "id": "os_text_2",
+            "text": "4×",
+            "weight": 600,
+            "size": 11,
+            "tracking_em": 0.04,
+            "line_height_em": 1.2,
+            "color": "cream_text",
+            "anchor": "middle",
+            "x": 510.0,
+            "cy": 448,
+            "layer": "bg",
+            "box": {
+              "x": 503.78,
+              "y": 444.09,
+              "w": 12.43,
+              "h": 7.82
+            }
+          }
+        },
+        {
+          "index": 3,
+          "text": "8×",
+          "x": 532,
+          "w": 44,
+          "text_item": {
+            "id": "os_text_3",
+            "text": "8×",
+            "weight": 600,
+            "size": 11,
+            "tracking_em": 0.04,
+            "line_height_em": 1.2,
+            "color": "cream_text",
+            "anchor": "middle",
+            "x": 554.0,
+            "cy": 448,
+            "layer": "bg",
+            "box": {
+              "x": 547.91,
+              "y": 444.09,
+              "w": 12.19,
+              "h": 7.82
+            }
+          }
+        }
+      ],
+      "default_index": 0
+    },
+    "toggles": [
+      {
+        "id": "auto_gain",
+        "param": "auto_gain",
+        "label": "AUTO GAIN",
+        "led": {
+          "cx": 655,
+          "cy": 448
+        },
+        "hit": {
+          "x": 643,
+          "y": 436,
+          "w": 110,
+          "h": 24
+        }
+      }
+    ],
+    "led": {
+      "d": 12,
+      "bezel_d": 18,
+      "sprite": {
+        "w": 36,
+        "h": 36
+      },
+      "off_color": "lens_off"
+    }
+  },
+  "texts": [
+    {
+      "id": "title",
+      "text": "SATURATOR",
+      "weight": 700,
+      "size": 23.98,
+      "tracking_em": 0.08,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "start",
+      "x": 38,
+      "cy": 99,
+      "layer": "bg",
+      "box": {
+        "x": 38,
+        "y": 90.48,
+        "w": 165.99,
+        "h": 17.05
+      }
+    },
+    {
+      "id": "curves_header",
+      "text": "CURVES",
+      "weight": 600,
+      "size": 12,
+      "tracking_em": 0.25,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 121.0,
+      "cy": 155,
+      "layer": "bg",
+      "box": {
+        "x": 89.07,
+        "y": 150.73,
+        "w": 63.86,
+        "h": 8.53
+      }
+    },
+    {
+      "id": "footer_version",
+      "text": "v1.0.0",
+      "weight": 600,
+      "size": 11,
+      "tracking_em": 0.12,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 80.5,
+      "cy": 448,
+      "layer": "bg",
+      "box": {
+        "x": 62.43,
+        "y": 444.09,
+        "w": 36.14,
+        "h": 7.82
+      }
+    },
+    {
+      "id": "footer_brand",
+      "text": "IAB LABS",
+      "weight": 600,
+      "size": 11,
+      "tracking_em": 0.2,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 161.5,
+      "cy": 448,
+      "layer": "bg",
+      "box": {
+        "x": 128.65,
+        "y": 444.09,
+        "w": 65.69,
+        "h": 7.82
+      }
+    },
+    {
+      "id": "curve_label_0",
+      "text": "SOFT\nCLIP",
+      "weight": 600,
+      "size": 10,
+      "tracking_em": 0.04,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 69.48,
+      "cy": 316.52,
+      "layer": "bg",
+      "box": {
+        "x": 55.89,
+        "y": 306.97,
+        "w": 27.18,
+        "h": 19.11
+      }
+    },
+    {
+      "id": "curve_label_1",
+      "text": "HARD\nCLIP",
+      "weight": 600,
+      "size": 10,
+      "tracking_em": 0.04,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 49.43,
+      "cy": 265.0,
+      "layer": "bg",
+      "box": {
+        "x": 34.36,
+        "y": 255.45,
+        "w": 30.14,
+        "h": 19.11
+      }
+    },
+    {
+      "id": "curve_label_2",
+      "text": "WARM",
+      "weight": 600,
+      "size": 10,
+      "tracking_em": 0.04,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 70.24,
+      "cy": 214.24,
+      "layer": "bg",
+      "box": {
+        "x": 52.18,
+        "y": 210.69,
+        "w": 36.13,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "curve_label_3",
+      "text": "TUBE",
+      "weight": 600,
+      "size": 10,
+      "tracking_em": 0.04,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 121.0,
+      "cy": 204.94,
+      "layer": "bg",
+      "box": {
+        "x": 106.76,
+        "y": 201.39,
+        "w": 28.49,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "curve_label_4",
+      "text": "FOLD",
+      "weight": 600,
+      "size": 10,
+      "tracking_em": 0.04,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 169.5,
+      "cy": 216.5,
+      "layer": "bg",
+      "box": {
+        "x": 155.95,
+        "y": 212.95,
+        "w": 27.09,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "curve_label_5",
+      "text": "RECTIFY",
+      "weight": 600,
+      "size": 10,
+      "tracking_em": 0.04,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 200.39,
+      "cy": 265.0,
+      "layer": "bg",
+      "box": {
+        "x": 177.5,
+        "y": 261.45,
+        "w": 45.79,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "curve_label_6",
+      "text": "BIT\nCRUSH",
+      "weight": 600,
+      "size": 10,
+      "tracking_em": 0.04,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 174.79,
+      "cy": 318.79,
+      "layer": "bg",
+      "box": {
+        "x": 156.66,
+        "y": 309.24,
+        "w": 36.26,
+        "h": 19.11
+      }
+    },
+    {
+      "id": "label_drive",
+      "text": "DRIVE",
+      "weight": 700,
+      "size": 16,
+      "tracking_em": 0.25,
+      "line_height_em": 1.2,
+      "color": "label_red",
+      "anchor": "middle",
+      "x": 520,
+      "cy": 352,
+      "layer": "bg",
+      "box": {
+        "x": 487.04,
+        "y": 346.31,
+        "w": 65.93,
+        "h": 11.38
+      }
+    },
+    {
+      "id": "label_mix",
+      "text": "DRY / WET",
+      "weight": 700,
+      "size": 13,
+      "tracking_em": 0.08,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 314,
+      "cy": 339,
+      "layer": "bg",
+      "box": {
+        "x": 274.8,
+        "y": 334.38,
+        "w": 78.4,
+        "h": 9.24
+      }
+    },
+    {
+      "id": "label_output",
+      "text": "OUTPUT",
+      "weight": 700,
+      "size": 13,
+      "tracking_em": 0.08,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 726,
+      "cy": 339,
+      "layer": "bg",
+      "box": {
+        "x": 695.92,
+        "y": 334.38,
+        "w": 60.16,
+        "h": 9.24
+      }
+    },
+    {
+      "id": "meter_label_in",
+      "text": "IN",
+      "weight": 700,
+      "size": 16,
+      "tracking_em": 0.04,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 377,
+      "cy": 88,
+      "layer": "bg",
+      "box": {
+        "x": 367.63,
+        "y": 82.31,
+        "w": 18.75,
+        "h": 11.38
+      }
+    },
+    {
+      "id": "meter_in_-20",
+      "text": "-20",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 306.8,
+      "cy": 64.07,
+      "layer": "bg",
+      "box": {
+        "x": 299.21,
+        "y": 60.52,
+        "w": 15.19,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "meter_in_-10",
+      "text": "-10",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 330.2,
+      "cy": 51.17,
+      "layer": "bg",
+      "box": {
+        "x": 323.23,
+        "y": 47.62,
+        "w": 13.94,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "meter_in_-7",
+      "text": "-7",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 345.83,
+      "cy": 46.78,
+      "layer": "bg",
+      "box": {
+        "x": 341.14,
+        "y": 43.23,
+        "w": 9.39,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "meter_in_-5",
+      "text": "-5",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 359.53,
+      "cy": 44.16,
+      "layer": "bg",
+      "box": {
+        "x": 354.91,
+        "y": 40.61,
+        "w": 9.25,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "meter_in_-3",
+      "text": "-3",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 377.19,
+      "cy": 43.44,
+      "layer": "bg",
+      "box": {
+        "x": 372.51,
+        "y": 39.89,
+        "w": 9.36,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "meter_in_0",
+      "text": "0",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 412.04,
+      "cy": 48.49,
+      "layer": "bg",
+      "box": {
+        "x": 409.19,
+        "y": 44.94,
+        "w": 5.71,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "meter_in_+3",
+      "text": "+3",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "red_zone",
+      "anchor": "middle",
+      "x": 455.74,
+      "cy": 73.26,
+      "layer": "bg",
+      "box": {
+        "x": 450.3,
+        "y": 69.71,
+        "w": 10.88,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "meter_label_out",
+      "text": "OUT",
+      "weight": 700,
+      "size": 16,
+      "tracking_em": 0.04,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 663,
+      "cy": 88,
+      "layer": "bg",
+      "box": {
+        "x": 645.21,
+        "y": 82.31,
+        "w": 35.58,
+        "h": 11.38
+      }
+    },
+    {
+      "id": "meter_out_-20",
+      "text": "-20",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 592.8,
+      "cy": 64.07,
+      "layer": "bg",
+      "box": {
+        "x": 585.21,
+        "y": 60.52,
+        "w": 15.19,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "meter_out_-10",
+      "text": "-10",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 616.2,
+      "cy": 51.17,
+      "layer": "bg",
+      "box": {
+        "x": 609.23,
+        "y": 47.62,
+        "w": 13.94,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "meter_out_-7",
+      "text": "-7",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 631.83,
+      "cy": 46.78,
+      "layer": "bg",
+      "box": {
+        "x": 627.14,
+        "y": 43.23,
+        "w": 9.39,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "meter_out_-5",
+      "text": "-5",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 645.53,
+      "cy": 44.16,
+      "layer": "bg",
+      "box": {
+        "x": 640.91,
+        "y": 40.61,
+        "w": 9.25,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "meter_out_-3",
+      "text": "-3",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 663.19,
+      "cy": 43.44,
+      "layer": "bg",
+      "box": {
+        "x": 658.51,
+        "y": 39.89,
+        "w": 9.36,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "meter_out_0",
+      "text": "0",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 698.04,
+      "cy": 48.49,
+      "layer": "bg",
+      "box": {
+        "x": 695.19,
+        "y": 44.94,
+        "w": 5.71,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "meter_out_+3",
+      "text": "+3",
+      "weight": 500,
+      "size": 10,
+      "tracking_em": 0.0,
+      "line_height_em": 1.2,
+      "color": "red_zone",
+      "anchor": "middle",
+      "x": 741.74,
+      "cy": 73.26,
+      "layer": "bg",
+      "box": {
+        "x": 736.3,
+        "y": 69.71,
+        "w": 10.88,
+        "h": 7.11
+      }
+    },
+    {
+      "id": "os_label",
+      "text": "OVERSAMPLING",
+      "weight": 700,
+      "size": 11,
+      "tracking_em": 0.08,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "middle",
+      "x": 345,
+      "cy": 448,
+      "layer": "bg",
+      "box": {
+        "x": 295.21,
+        "y": 444.09,
+        "w": 99.58,
+        "h": 7.82
+      }
+    },
+    {
+      "id": "os_text_0",
+      "text": "OFF",
+      "weight": 600,
+      "size": 11,
+      "tracking_em": 0.04,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 422.0,
+      "cy": 448,
+      "layer": "bg",
+      "box": {
+        "x": 410.95,
+        "y": 444.09,
+        "w": 22.11,
+        "h": 7.82
+      }
+    },
+    {
+      "id": "os_text_1",
+      "text": "2×",
+      "weight": 600,
+      "size": 11,
+      "tracking_em": 0.04,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 466.0,
+      "cy": 448,
+      "layer": "bg",
+      "box": {
+        "x": 459.86,
+        "y": 444.09,
+        "w": 12.28,
+        "h": 7.82
+      }
+    },
+    {
+      "id": "os_text_2",
+      "text": "4×",
+      "weight": 600,
+      "size": 11,
+      "tracking_em": 0.04,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 510.0,
+      "cy": 448,
+      "layer": "bg",
+      "box": {
+        "x": 503.78,
+        "y": 444.09,
+        "w": 12.43,
+        "h": 7.82
+      }
+    },
+    {
+      "id": "os_text_3",
+      "text": "8×",
+      "weight": 600,
+      "size": 11,
+      "tracking_em": 0.04,
+      "line_height_em": 1.2,
+      "color": "cream_text",
+      "anchor": "middle",
+      "x": 554.0,
+      "cy": 448,
+      "layer": "bg",
+      "box": {
+        "x": 547.91,
+        "y": 444.09,
+        "w": 12.19,
+        "h": 7.82
+      }
+    },
+    {
+      "id": "toggle_auto_gain",
+      "text": "AUTO GAIN",
+      "weight": 700,
+      "size": 11,
+      "tracking_em": 0.08,
+      "line_height_em": 1.2,
+      "color": "ink",
+      "anchor": "start",
+      "x": 672,
+      "cy": 448,
+      "layer": "bg",
+      "box": {
+        "x": 672,
+        "y": 444.09,
+        "w": 69.38,
+        "h": 7.82
+      }
+    }
+  ],
+  "assets": [
+    {
+      "file": "bg.png",
+      "box": {
+        "x": 0,
+        "y": 0,
+        "w": 840,
+        "h": 500
+      },
+      "contains": "everything static: panel, sidebar, logo, all printed text and scales, meter housings+faces (no needle, no glass glare), knob wells with contact shadows, empty readout pills (CURVE pill lit), oversampling segments OFF, LEDs OFF, curve labels unlit, screws"
+    },
+    {
+      "file": "knob_drive_body.png",
+      "centre": "knobs.drive",
+      "note": "skirt + cap, lighting fixed, NOT rotated"
+    },
+    {
+      "file": "knob_drive_pointer.png",
+      "centre": "knobs.drive",
+      "note": "pointer line only, rendered at 0 deg; egui rotates"
+    },
+    {
+      "file": "knob_mix_body.png",
+      "centre": "knobs.mix"
+    },
+    {
+      "file": "knob_mix_pointer.png",
+      "centre": "knobs.mix"
+    },
+    {
+      "file": "knob_output_body.png",
+      "centre": "knobs.output"
+    },
+    {
+      "file": "knob_output_pointer.png",
+      "centre": "knobs.output"
+    },
+    {
+      "file": "curve_0.png .. curve_6.png",
+      "centre": "selector",
+      "note": "full knob at each position angle"
+    },
+    {
+      "file": "curve_led_0_on.png .. curve_led_6_on.png",
+      "centre": "selector.positions[i].led",
+      "box": "selector.position_leds.sprite"
+    },
+    {
+      "file": "curve_label_0_on.png .. curve_label_6_on.png",
+      "centre": "selector.positions[i].label_sprite",
+      "box": "selector.positions[i].label_sprite",
+      "note": "lit (red) label of the selected curve"
+    },
+    {
+      "file": "needle.png",
+      "box": {
+        "w": 252,
+        "h": 252
+      },
+      "centre": "meter pivot",
+      "note": "rendered at 0 deg, pointing up from pivot; same sprite for IN and OUT"
+    },
+    {
+      "file": "meter_glass_in.png",
+      "box": "meters.in.housing",
+      "note": "glass glare only, drawn ABOVE the needle"
+    },
+    {
+      "file": "meter_glass_out.png",
+      "box": "meters.out.housing"
+    },
+    {
+      "file": "os_0_on.png .. os_3_on.png",
+      "box": "bottom_bar.oversampling.segments[i] (x, w) with box y/h",
+      "note": "pressed + lit segment incl. its text"
+    },
+    {
+      "file": "led_auto_gain_on.png",
+      "centre": "toggle led",
+      "box": "bottom_bar.led.sprite"
+    }
+  ],
+  "draw_order": [
+    "bg.png",
+    "knob bodies, curve_<i>",
+    "knob pointers (rotated)",
+    "needles (rotated, clipped to meter face)",
+    "meter_glass_*",
+    "led_*_on, os_<i>_on, curve_led_<i>_on, curve_label_<i>_on",
+    "egui text: readouts"
+  ],
+  "interaction": {
+    "knob_drag": "vertical drag, 200 px = full range; Shift = fine (x0.1); double-click = default",
+    "selector": "click/drag steps through 7 positions; scroll also steps; clicking a label selects it",
+    "value_to_angle": "angle = from + (to - from) * normalized_param",
+    "automation": "begin_set_parameter on drag start, set_parameter_normalized while dragging, end_set_parameter on release"
+  }
+}

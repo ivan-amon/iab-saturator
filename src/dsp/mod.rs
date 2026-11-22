@@ -9,6 +9,7 @@
 pub mod curve;
 pub mod db;
 pub mod drive;
+pub mod output;
 pub mod smoother;
 
 #[cfg(test)]

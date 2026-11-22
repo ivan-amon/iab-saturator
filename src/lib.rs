@@ -1,104 +1,53 @@
+use nice_plug::editor::dpi::LogicalSize;
 use nice_plug::prelude::*;
+use nice_plug_egui::{
+    EguiEditor, EguiEditorState, EguiNiceSettings, RepaintNotifier, create_egui_editor,
+};
 use std::sync::Arc;
 
 mod dsp;
+mod editor;
+mod params;
 
-use dsp::{curve::curve, db::db_to_gain, drive::drive, smoother::Smoother};
+use dsp::{curve::curve, db::db_to_gain, drive::drive, output::output, smoother::Smoother};
+use editor::{IabEditor, Layout};
+use params::IabSaturatorParams;
 
-/// Time constant of the Drive smoother, τ in ms.
-const DRIVE_SMOOTHING_TAU_MS: f32 = 10.0;
+/// Time constant of the smoother, τ in ms.
+const SMOOTHING_TAU_MS: f32 = 10.0;
 
 struct IabSaturator {
     params: Arc<IabSaturatorParams>,
     /// One shared smoother for the linear drive gain (Drive is a single parameter for all
     /// channels). Persists across buffers.
     drive_smoother: Smoother,
-}
-
-/// Parameter IDs are part of saved projects and automation: never change them.
-#[derive(Params)]
-pub struct IabSaturatorParams {
-    /// Drive in dB. Smoothing is done by our own `Smoother` on the linear gain, so nice-plug's
-    /// built-in smoother is left disabled (the `FloatParam::new` default).
-    #[id = "drive"]
-    pub drive: FloatParam,
-
-    /// Output level in dB. Declared, not wired to the DSP yet (no smoother until it is).
-    #[id = "output"]
-    pub output: FloatParam,
-
-    /// Dry/wet mix in %. Declared, not wired to the DSP yet (no smoother until it is).
-    #[id = "dry_wet"]
-    pub dry_wet: FloatParam,
-
-    /// Waveshaper curve. Declared, not wired to the DSP yet.
-    #[id = "curve"]
-    pub curve: EnumParam<CurveType>,
-}
-
-/// Curve selector positions. The `#[id]`s are stored in saved projects: never change them.
-#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CurveType {
-    #[id = "tanh"]
-    #[name = "TANH"]
-    Tanh,
-    #[id = "curve2"]
-    #[name = "CURVE 2"]
-    Curve2,
-    #[id = "curve3"]
-    #[name = "CURVE 3"]
-    Curve3,
-    #[id = "curve4"]
-    #[name = "CURVE 4"]
-    Curve4,
+    output_smoother: Smoother,
+    /// Window size and open/closed state, shared with nice-plug-egui.
+    editor_state: Arc<EguiEditorState>,
+    /// Handed to nice-plug-egui by `editor()`. `None` if layout.json failed to parse: the
+    /// plugin then runs with the host's generic view.
+    editor: Option<IabEditor>,
 }
 
 impl Default for IabSaturator {
     fn default() -> Self {
+        let params = Arc::new(IabSaturatorParams::default());
+        let editor = match Layout::load() {
+            Ok(layout) => Some(IabEditor::new(params.clone(), layout)),
+            Err(e) => {
+                nice_error!("layout.json failed to parse: {e}");
+                None
+            }
+        };
+        let size = editor
+            .as_ref()
+            .map_or(LogicalSize::new(1.0, 1.0), IabEditor::window_size);
         Self {
-            params: Arc::new(IabSaturatorParams::default()),
+            params,
             drive_smoother: Smoother::default(),
-        }
-    }
-}
-
-impl Default for IabSaturatorParams {
-    fn default() -> Self {
-        Self {
-            drive: FloatParam::new(
-                "Drive",
-                0.0,
-                FloatRange::Linear {
-                    min: 0.0,
-                    max: 36.0,
-                },
-            )
-            .with_unit(" dB")
-            .with_value_to_string(formatters::v2s_f32_rounded(1)),
-
-            output: FloatParam::new(
-                "Output",
-                0.0,
-                FloatRange::Linear {
-                    min: -36.0,
-                    max: 0.0,
-                },
-            )
-            .with_unit(" dB")
-            .with_value_to_string(formatters::v2s_f32_rounded(1)),
-
-            dry_wet: FloatParam::new(
-                "Dry/Wet",
-                100.0,
-                FloatRange::Linear {
-                    min: 0.0,
-                    max: 100.0,
-                },
-            )
-            .with_unit(" %")
-            .with_value_to_string(formatters::v2s_f32_rounded(0)),
-
-            curve: EnumParam::new("Curve", CurveType::Tanh),
+            output_smoother: Smoother::default(),
+            editor_state: EguiEditorState::from_size(size, 1.0),
+            editor,
         }
     }
 }
@@ -132,13 +81,21 @@ impl Plugin for IabSaturator {
     // sub-block, so "read Drive once per process() call" stays sample accurate.
     const SAMPLE_ACCURATE_AUTOMATION: bool = true;
 
-    // No custom GUI for now: the host shows its generic parameter view.
-    type Editor = ();
+    type Editor = EguiEditor<IabEditor>;
     type SysExMessage = ();
     type BackgroundTask = ();
 
     fn params(&self) -> Arc<dyn Params> {
         self.params.clone()
+    }
+
+    fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Self::Editor> {
+        create_egui_editor(
+            self.editor_state.clone(),
+            RepaintNotifier::new(),
+            EguiNiceSettings::new().with_tile(Self::NAME),
+            self.editor.take()?,
+        )
     }
 
     fn activate(
@@ -149,7 +106,9 @@ impl Plugin for IabSaturator {
     ) -> bool {
         // fs is only needed to compute the smoother coefficient. Nothing else to allocate.
         self.drive_smoother
-            .set_sample_rate(buffer_config.sample_rate, DRIVE_SMOOTHING_TAU_MS);
+            .set_sample_rate(buffer_config.sample_rate, SMOOTHING_TAU_MS);
+        self.output_smoother
+            .set_sample_rate(buffer_config.sample_rate, SMOOTHING_TAU_MS);
         true
     }
 
@@ -157,6 +116,8 @@ impl Plugin for IabSaturator {
         // Audio thread: no allocations. Snap gs to the current g so there is no ramp.
         self.drive_smoother
             .reset(db_to_gain(self.params.drive.value()));
+        self.output_smoother
+            .reset(db_to_gain(self.params.output.value()));
     }
 
     fn process(
@@ -167,12 +128,14 @@ impl Plugin for IabSaturator {
     ) -> ProcessStatus {
         // Read Drive once per buffer: g[n] is a staircase, the smoother makes it continuous.
         let g = db_to_gain(self.params.drive.value());
+        let g_out = db_to_gain(self.params.output.value());
 
         // Per frame, then per channel. Time order within each channel is preserved.
         for channel_samples in buffer.iter_samples() {
             let gs = self.drive_smoother.next(g);
+            let g_out_s = self.output_smoother.next(g_out);
             for sample in channel_samples {
-                *sample = curve(drive(gs, *sample));
+                *sample = output(g_out_s, curve(drive(gs, *sample)));
             }
         }
 

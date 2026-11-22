@@ -27,4 +27,9 @@ mod tests {
         // 10^(6/20) = 1.99526...
         assert!((db_to_gain(6.0) - 1.995_262_3).abs() < EPS);
     }
+
+    #[test]
+    fn negative_thirty_six_db_is_0_0158() {
+        assert!((db_to_gain(-36.0) - 0.015_848_9).abs() < EPS);
+    }
 }
